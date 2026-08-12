@@ -1,0 +1,66 @@
+#include <stdio.h>
+#include <math.h>
+
+#define TOTAL_STUDENTS 10
+#define NEW_STUDENTS 2
+#define K 3
+
+// Each student has: hours studied, and result (0 = Fail, 1 = Pass)
+float hours[TOTAL_STUDENTS] = {1.0, 1.5, 1.2, 1.8, 1.1, 5.0, 5.5, 5.2, 5.8, 5.1};
+int result[TOTAL_STUDENTS]  = {0,   0,   0,   0,   0,   1,   1,   1,   1,   1};
+
+// Find how far apart two study hours are
+float findGap(float a, float b) {
+    return fabs(a - b);
+}
+
+// Guess result for a new student based on closest K students
+int guessResult(float newHours) {
+    float gap[TOTAL_STUDENTS];
+
+    // Step 1: find gap between new student and every old student
+    for (int i = 0; i < TOTAL_STUDENTS; i++) {
+        gap[i] = findGap(hours[i], newHours);
+    }
+
+    // Step 2: pick K closest students and count Pass/Fail
+    int failCount = 0, passCount = 0;
+
+    for (int k = 0; k < K; k++) {
+        int closest = 0;
+        for (int i = 1; i < TOTAL_STUDENTS; i++) {
+            if (gap[i] < gap[closest]) {
+                closest = i;
+            }
+        }
+        if (result[closest] == 0) failCount++;
+        else passCount++;
+
+        gap[closest] = 999; // remove this student so we don't pick it again
+    }
+
+    // Step 3: return whichever got more votes
+    if (passCount > failCount) return 1;
+    else return 0;
+}
+
+int main() {
+    float newStudentHours[NEW_STUDENTS] = {5.4, 1.3};
+    int actualResult[NEW_STUDENTS] = {1, 0}; // real answer, to check accuracy
+
+    int correctGuesses = 0;
+
+    for (int i = 0; i < NEW_STUDENTS; i++) {
+        int guess = guessResult(newStudentHours[i]);
+
+        printf("Student studied %.1f hours -> Guess: %s, Actual: %s\n",
+               newStudentHours[i],
+               guess == 1 ? "Pass" : "Fail",
+               actualResult[i] == 1 ? "Pass" : "Fail");
+
+        if (guess == actualResult[i]) correctGuesses++;
+    }
+
+    printf("Accuracy: %.1f%%\n", (correctGuesses * 100.0) / NEW_STUDENTS);
+    return 0;
+}
